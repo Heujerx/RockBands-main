@@ -27,10 +27,21 @@
 
   <h4>Albums</h4>
   <ul>
-    {% for album in band.albums %}
-    <li>{{ album.AlbumTitle }} ({{ album.ReleaseYear }})</li>
-    {% endfor %}
-  </ul>
+  {% for album in band.albums %}
+  <li>
+    {{ album.AlbumTitle }} ({{ album.ReleaseYear }})
+    {% if album.featured_bands %}
+      <br><small>Featuring:
+        {% for fb in album.featured_bands %}
+          {{ fb.BandName }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </small>
+    {% endif %}
+  </li>
+  {% else %}
+  <li><em>No albums yet</em></li>
+  {% endfor %}
+</ul>
 </section>
 <hr />
 {% endfor %} {% endblock %}

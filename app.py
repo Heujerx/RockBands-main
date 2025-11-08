@@ -18,18 +18,6 @@ db = SQLAlchemy(app)
 # DATABASE MODELS
 # ==========================
 
-
-class Bands(db.Model):
-    BandID = db.Column(db.Integer, primary_key=True)
-    BandName = db.Column(db.String(80), nullable=False)
-    FormedYear = db.Column(db.Integer)
-    HomeLocation = db.Column(db.String(80))
-    # Relationship: One band has many members + albums
-    # members = db.relationship('Members', backref='band', lazy=True)
-    memberships = db.relationship('Memberships', backref='band', lazy=True)
-    albums = db.relationship('Albums', backref='band', lazy=True)
-
-
 class Members(db.Model):
     MemberID = db.Column(db.Integer, primary_key=True)
     # BandID = db.Column(db.Integer, db.ForeignKey('bands.BandID'), nullable=False)
@@ -48,13 +36,35 @@ class Memberships(db.Model):
     EndYear = db.Column(db.Integer)  # NULL if still active
     Role = db.Column(db.Text)
 
+class Bands(db.Model):
+    __tablename__ = 'bands'
+    BandID = db.Column(db.Integer, primary_key=True)
+    BandName = db.Column(db.String(80), nullable=False)
+    FormedYear = db.Column(db.Integer)
+    HomeLocation = db.Column(db.String(80))
+    # Relationship: One band has many members + albums
+    # members = db.relationship('Members', backref='band', lazy=True)
+    memberships = db.relationship('Memberships', backref='band', lazy=True)
+    albums = db.relationship('Albums', backref='band', lazy=True)
+
+album_featured_bands = db.Table(
+    'album_featured_bands',
+    db.Column('AlbumID', db.Integer, db.ForeignKey('albums.AlbumID'), primary_key=True),
+    db.Column('BandID', db.Integer, db.ForeignKey('bands.BandID'), primary_key=True)
+)
 
 class Albums(db.Model):
+    __tablename__ = 'albums'
     AlbumID = db.Column(db.Integer, primary_key=True)
-    BandID = db.Column(db.Integer, db.ForeignKey(
-        'bands.BandID'), nullable=False)
     AlbumTitle = db.Column(db.String(80), nullable=False)
     ReleaseYear = db.Column(db.Integer)
+    BandID = db.Column(db.Integer, db.ForeignKey('bands.BandID'), nullable=False)
+
+    featured_bands = db.relationship(
+        'Bands',
+        secondary=album_featured_bands,
+        backref='featured_on_albums'
+    )
 
 # ==========================
 # ROUTES
@@ -104,8 +114,15 @@ def add_album():
             ReleaseYear=request.form['releaseyear'],
             BandID=request.form['bandid']
         )
+
+        selected_ids = request.form.getlist('featuredbands')
+        if selected_ids:
+            selected_bands = Bands.query.filter(Bands.BandID.in_(selected_ids)).all()
+            new_album.featured_bands = selected_bands
+
         db.session.add(new_album)
         db.session.commit()
+        flash('Album added successfully!', 'success')
         return redirect(url_for('index'))
     return render_template('add_album.html', bands=bands)
 

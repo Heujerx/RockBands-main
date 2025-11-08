@@ -2,15 +2,27 @@
 {% block content %}
 <h2>Add Album</h2>
 <form method="post">
-    <label>Album Title:</label><input type="text" name="albumtitle"><br>
-    <label>Release Year:</label><input type="number" name="releaseyear"><br>
+    <label>Album Title:</label>
+    <input type="text" name="albumtitle" required><br>
 
-    <label>Band:</label>
-    <select name="bandid">
+    <label>Release Year:</label>
+    <input type="number" name="releaseyear"><br>
+
+    <label>Main Band:</label>
+    <select name="bandid" required>
         {% for band in bands %}
         <option value="{{ band.BandID }}">{{ band.BandName }}</option>
         {% endfor %}
     </select><br>
+
+    <label>Featured Bands:</label><br>
+    <select name="featuredbands" multiple size="6">
+        {% for band in bands %}
+            <option value="{{ band.BandID }}">{{ band.BandName }}</option>
+        {% endfor %}
+    </select><br>
+    <small>Hold Ctrl (Windows) or Command (Mac) to select multiple bands.</small><br>
+    <p>Select none if the album is not featuring any other bands</p>
 
     <button type="submit">Save</button>
 </form>
